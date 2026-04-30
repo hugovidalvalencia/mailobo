@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MaiLobo - El Narrador</title>
+    <!-- Fuentes medievales/clásicas -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        
+        <!-- PANTALLA 1: CONFIGURACIÓN -->
+        <section id="setup-screen" class="screen active">
+            <header class="manuscript-header">
+                <h1>MaiLobo</h1>
+                <p class="subtitle">Crónicas del Narrador</p>
+            </header>
+            
+            <div class="content">
+                <div class="parchment-card">
+                    <h2>Jugadores (<span id="setup-player-count">0</span>)</h2>
+                    <div class="input-group">
+                        <input type="text" id="new-player-input" placeholder="Nombre del jugador..." maxlength="20">
+                        <button id="add-player-btn" class="btn-ink">+</button>
+                    </div>
+                    <ul id="setup-players-list" class="ink-list"></ul>
+                </div>
+
+                <div class="parchment-card">
+                    <h2>Roles y Ajustes</h2>
+                    <div class="setting-row">
+                        <span>Lobos</span>
+                        <div class="number-control">
+                            <button id="dec-wolves" class="btn-icon">-</button>
+                            <span id="wolves-count">1</span>
+                            <button id="inc-wolves" class="btn-icon">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="roles-grid">
+                        <label class="role-checkbox">
+                            <input type="checkbox" id="role-vidente" checked>
+                            <span class="custom-chk"></span> Vidente
+                        </label>
+                        <label class="role-checkbox">
+                            <input type="checkbox" id="role-bruja" checked>
+                            <span class="custom-chk"></span> Bruja
+                        </label>
+                        <label class="role-checkbox">
+                            <input type="checkbox" id="role-cazador">
+                            <span class="custom-chk"></span> Cazador
+                        </label>
+                        <label class="role-checkbox">
+                            <input type="checkbox" id="role-cupido">
+                            <span class="custom-chk"></span> Cupido
+                        </label>
+                        <label class="role-checkbox">
+                            <input type="checkbox" id="role-nina">
+                            <span class="custom-chk"></span> Niña
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="distribute-roles-btn" class="btn-wax-seal" disabled>Repartir Roles</button>
+            </div>
+        </section>
+
+        <!-- PANTALLA 2: REVELACIÓN DE ROLES (Pass-and-Play) -->
+        <section id="reveal-screen" class="screen">
+            <header class="manuscript-header">
+                <h2>El Destino</h2>
+                <p id="reveal-progress" class="reveal-progress"></p>
+            </header>
+            
+            <div class="content flex-center">
+                <div class="reveal-card">
+                    <div class="card-front" id="reveal-front">
+                        <p class="hint">Turno de:</p>
+                        <h3 id="reveal-player-name">Jugador</h3>
+                        <p class="hint-hold">(Mantén presionado tu dedo aquí para leer tu rol en secreto)</p>
+                    </div>
+                    <div class="card-back hidden" id="reveal-back">
+                        <p class="hint-small">Tu rol es:</p>
+                        <h2 id="reveal-role-name">Rol</h2>
+                        <p id="reveal-role-desc" style="margin-top: 15px; font-size: 1.1rem; padding: 0 15px; font-style: italic; color: var(--text-muted);"></p>
+                    </div>
+                </div>
+                
+                <button id="reveal-next" class="btn-primary hidden" style="margin-top: 20px; border-radius:4px;">Siguiente</button>
+                <button id="reveal-finish" class="btn-primary hidden" style="margin-top: 20px;">Comenzar la Noche</button>
+            </div>
+        </section>
+
+        <!-- PANTALLA 3: DASHBOARD DEL NARRADOR -->
+        <section id="dashboard-screen" class="screen">
+            <header class="manuscript-header compact">
+                <h2>El Poblado</h2>
+                <div class="status-bar">
+                    <span class="status-lobos">Lobos: <b id="dash-lobos-count">0</b></span>
+                    <span class="status-aldeanos">Aldeanos: <b id="dash-aldeanos-count">0</b></span>
+                </div>
+            </header>
+            
+            <div class="content">
+                <div class="parchment-card">
+                    <ul id="dashboard-players-list" class="dashboard-grid">
+                        <!-- Llenado dinámico -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="actions dashboard-actions">
+                <button id="start-night-btn" class="btn-primary">Noche (Script)</button>
+                <button id="reset-game-btn" class="btn-danger" style="margin-top: 15px;">Terminar Partida (Volver al Lobby)</button>
+            </div>
+        </section>
+
+        <!-- PANTALLA 4: SCRIPT NOCTURNO -->
+        <section id="script-screen" class="screen">
+            <header class="manuscript-header compact">
+                <h2 id="script-title">La Noche Cae</h2>
+            </header>
+            
+            <div class="content" id="script-content">
+                <!-- Contenido dinámico del paso actual -->
+            </div>
+
+            <div class="actions">
+                <button id="script-next-btn" class="btn-primary">Continuar</button>
+            </div>
+        </section>
+
+        <!-- PANTALLA 5: ALERTAS / EVENTOS (Pantalla Intermedia) -->
+        <section id="alert-screen" class="hidden">
+            <div class="alert-content">
+                <h2 id="alert-title" class="alert-title">¡Atención!</h2>
+                <p id="alert-message" class="alert-message">Mensaje del evento.</p>
+                
+                <div id="alert-interactive-area">
+                    <!-- Para seleccionar a quién mata el cazador, etc. -->
+                </div>
+
+                <div class="alert-actions">
+                    <button id="alert-confirm-btn" class="btn-wax-seal">Confirmar</button>
+                    <button id="alert-cancel-btn" class="btn-secondary hidden">Cancelar</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
