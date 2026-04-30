@@ -489,18 +489,21 @@ function manualRevive(index) {
 
 function checkWinCondition() {
     let wolves = 0;
-    let aldeanos = 0;
+    let nonWolves = 0;
+    
     state.assignedRoles.forEach(p => {
         if (!p.isDead) {
             if (p.role === ROLES.LOBO) wolves++;
-            else aldeanos++;
+            else nonWolves++;
         }
     });
 
-    if (wolves === 0 && aldeanos > 0) {
+    if (wolves === 0 && nonWolves > 0) {
         showAlert("¡Fin del Juego!", "Los Aldeanos han eliminado a todos los lobos. ¡La Aldea Gana!", "", () => {});
-    } else if (wolves >= aldeanos && wolves > 0) {
-        showAlert("¡Fin del Juego!", "Los Lobos han igualado el número de aldeanos. ¡Los Lobos Ganan!", "", () => {});
+    } else if (nonWolves === 0 && wolves > 0) {
+        showAlert("¡Fin del Juego!", "Los Lobos han eliminado a todos los aldeanos. ¡Los Lobos Ganan!", "", () => {});
+    } else if (wolves === 0 && nonWolves === 0) {
+        showAlert("¡Fin del Juego!", "Nadie ha sobrevivido a la masacre. ¡Es un Empate!", "", () => {});
     }
 }
 
