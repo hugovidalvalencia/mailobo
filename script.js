@@ -161,7 +161,7 @@ function validateSetup() {
 
     const totalRolesNeeded = state.rolesCount.wolves + specialCount;
     const canStart = state.players.length >= Math.max(3, totalRolesNeeded);
-    
+
     setupDom.distributeBtn.disabled = !canStart;
 }
 
@@ -225,7 +225,7 @@ function renderRevealPlayer() {
     revealDom.playerName.textContent = player.name;
     revealDom.roleName.textContent = player.role;
     revealDom.roleDesc.textContent = ROLE_DESCRIPTIONS[player.role];
-    
+
     // Mostrar progreso
     revealDom.progress.textContent = `${state.revealIndex + 1} de ${state.assignedRoles.length}`;
     if (state.revealIndex < state.assignedRoles.length - 1) {
@@ -237,7 +237,7 @@ function renderRevealPlayer() {
         revealDom.nextBtn.classList.add('hidden');
         revealDom.finishBtn.classList.remove('hidden');
     }
-    
+
     // Reset state
     revealDom.cardFront.classList.remove('hidden');
     revealDom.cardBack.classList.add('hidden');
@@ -288,13 +288,13 @@ function renderDashboard() {
     state.assignedRoles.forEach((p, index) => {
         if (!p.isDead) {
             if (p.role === ROLES.LOBO) wolvesCount++;
-            else aldeanosCount++; 
+            else aldeanosCount++;
         }
 
         const li = document.createElement('li');
         li.className = 'player-card';
         if (p.isDead) li.classList.add('li-dead');
-        
+
         // Al hacer click, mostrar opciones
         li.onclick = () => showPlayerAction(index);
 
@@ -318,7 +318,7 @@ function renderDashboard() {
 
 function showPlayerAction(index) {
     const p = state.assignedRoles[index];
-    
+
     // Estilo del rol para el mensaje
     const roleHtml = `<span style="color:var(--accent-gold); font-family:var(--font-heading); font-size:1.3rem; display:block; margin-top:5px;">${p.role}</span>`;
 
@@ -328,7 +328,7 @@ function showPlayerAction(index) {
             p.name,
             `${roleHtml}<p style="margin-top:15px; font-size:0.95rem;"><b>Destino Sellado</b>: Este jugador está profundamente atado a su pareja. Al estar muerto, su situación no puede ser modificada individualmente.</p>`,
             ``,
-            () => {}, // No hace nada, solo cierra
+            () => { }, // No hace nada, solo cierra
             null
         );
         alertDom.confirmBtn.textContent = "Aceptar";
@@ -345,7 +345,7 @@ function showPlayerAction(index) {
             if (!p.isDead) manualKill(index);
             else manualRevive(index);
         },
-        () => {} // Cancelar
+        () => { } // Cancelar
     );
     // Cambiar texto del botón confirmar al nombre de la acción
     alertDom.confirmBtn.textContent = action;
@@ -357,12 +357,12 @@ function showAlert(title, message, areaHtml, onConfirm, onCancel = null) {
     alertDom.title.textContent = title;
     alertDom.msg.innerHTML = message;
     alertDom.area.innerHTML = areaHtml || '';
-    
+
     // Reset defaults to prevent carrying over text/styles from previous alerts
     alertDom.confirmBtn.textContent = "Confirmar";
     alertDom.confirmBtn.style.backgroundColor = "var(--accent-crimson)";
     alertDom.cancelBtn.textContent = "Cancelar";
-    
+
     alertDom.confirmBtn.onclick = () => {
         screens.alert.classList.add('hidden');
         if (onConfirm) onConfirm();
@@ -384,7 +384,7 @@ function showAlert(title, message, areaHtml, onConfirm, onCancel = null) {
 // LOGICA DE MUERTE MANUAL
 function manualKill(index) {
     const player = state.assignedRoles[index];
-    
+
     // Si es Cazador, abrir alerta intermedia con MATRIZ
     if (player.role === ROLES.CAZADOR) {
         // Marcamos muerto de inmediato para consistencia
@@ -394,14 +394,18 @@ function manualKill(index) {
 
         let gridItemsHtml = '';
         state.assignedRoles.forEach((p, i) => {
-            // No puede dispararse a sí mismo ni a muertos
-            if (!p.isDead && i !== index) {
-                gridItemsHtml += `
-                    <li class="player-card selectable-hunter-target" data-index="${i}" style="min-height:50px; padding:5px;">
-                        <span style="font-size:0.85rem;">${p.name}</span>
-                    </li>
-                `;
-            }
+            const isDead = p.isDead;
+            const isSelf = i === index;
+            const isSelectable = !isDead && !isSelf;
+            const deadClass = isDead ? 'li-dead' : '';
+            const selectableClass = isSelectable ? 'selectable-hunter-target' : '';
+            const extraStyle = !isSelectable ? 'pointer-events:none; opacity:0.6;' : '';
+
+            gridItemsHtml += `
+                <li class="player-card ${selectableClass} ${deadClass}" data-index="${i}" style="min-height:50px; padding:5px; ${extraStyle}">
+                    <span style="font-size:0.85rem;">${p.name}</span>
+                </li>
+            `;
         });
 
         showAlert(
@@ -439,7 +443,7 @@ function manualKill(index) {
                 };
             });
         }, 50);
-        return; 
+        return;
     }
 
     executeKill(index);
@@ -467,8 +471,9 @@ function executeKill(index) {
                 `${player.name} era un enamorado. Su pareja, ${otherLover.name}, debe morir de tristeza.`,
                 "",
                 () => {
-                    // Si el segundo enamorado era el Cazador, disparar su tiro de gracia
-                    if (otherLover.role === ROLES.CAZADOR) {
+                    // Si el segundo enamorado era el Cazador, NO usar manualKill si estamos en el script
+                    const inScript = screens.script.classList.contains('active');
+                    if (otherLover.role === ROLES.CAZADOR && !inScript) {
                         manualKill(otherIdx);
                     }
                     checkWinCondition();
@@ -490,7 +495,7 @@ function manualRevive(index) {
 function checkWinCondition() {
     let wolves = 0;
     let nonWolves = 0;
-    
+
     state.assignedRoles.forEach(p => {
         if (!p.isDead) {
             if (p.role === ROLES.LOBO) wolves++;
@@ -499,11 +504,11 @@ function checkWinCondition() {
     });
 
     if (wolves === 0 && nonWolves > 0) {
-        showAlert("¡Fin del Juego!", "Los Aldeanos han eliminado a todos los lobos. ¡La Aldea Gana!", "", () => {});
+        showAlert("¡Fin del Juego!", "Los Aldeanos han eliminado a todos los lobos. ¡La Aldea Gana!", "", () => { });
     } else if (nonWolves === 0 && wolves > 0) {
-        showAlert("¡Fin del Juego!", "Los Lobos han eliminado a todos los aldeanos. ¡Los Lobos Ganan!", "", () => {});
+        showAlert("¡Fin del Juego!", "Los Lobos han eliminado a todos los aldeanos. ¡Los Lobos Ganan!", "", () => { });
     } else if (wolves === 0 && nonWolves === 0) {
-        showAlert("¡Fin del Juego!", "Nadie ha sobrevivido a la masacre. ¡Es un Empate!", "", () => {});
+        showAlert("¡Fin del Juego!", "Nadie ha sobrevivido a la masacre. ¡Es un Empate!", "", () => { });
     }
 }
 
@@ -530,10 +535,22 @@ function renderScriptStep() {
     const isFirstNight = sState.round === 1;
     let contentHtml = '';
 
+    // Aplicar color de fondo según el paso actual
+    const screen = document.getElementById('script-screen');
+    screen.classList.remove('bg-stage-cupido', 'bg-stage-lobos', 'bg-stage-bruja', 'bg-stage-vidente', 'bg-stage-cazador', 'bg-stage-votacion', 'bg-stage-default');
+    
+    if (sState.step === 1 || sState.step === 1.5) screen.classList.add('bg-stage-cupido');
+    else if (sState.step === 2) screen.classList.add('bg-stage-vidente');
+    else if (sState.step === 3) screen.classList.add('bg-stage-lobos');
+    else if (sState.step === 4) screen.classList.add('bg-stage-bruja');
+    else if (sState.step === 6) screen.classList.add('bg-stage-votacion');
+    else if (sState.step === 'cazador') screen.classList.add('bg-stage-cazador');
+    else screen.classList.add('bg-stage-default');
+
     // Utilidades
     const getAlivePlayer = (role) => state.assignedRoles.find(p => p.role === role && !p.isDead);
     const isAlive = (role) => !!getAlivePlayer(role);
-    
+
     const advanceStep = () => {
         sState.step++;
         renderScriptStep();
@@ -544,25 +561,30 @@ function renderScriptStep() {
         contentHtml = `<p class="script-instruction">"La aldea duerme. Todos cierran los ojos."</p>`;
         scriptDom.nextBtn.textContent = "Siguiente";
         scriptDom.nextBtn.onclick = advanceStep;
-    } 
+    }
     else if (sState.step === 1) { // CUPIDO
         const cupido = getAlivePlayer(ROLES.CUPIDO);
         if (isFirstNight && cupido) {
             scriptDom.title.textContent = "Turno de Cupido";
-            
+
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
-                if (!p.isDead && p.role !== ROLES.CUPIDO) {
-                    gridItemsHtml += `
-                        <li class="player-card selectable-cupid" data-index="${i}">
-                            <div class="player-info">
-                                <span class="player-name">${p.name}</span>
-                            </div>
-                        </li>
-                    `;
-                }
+                const isDead = p.isDead;
+                const isSelf = p.role === ROLES.CUPIDO;
+                const isSelectable = !isDead && !isSelf;
+                const deadClass = isDead ? 'li-dead' : '';
+                const selectableClass = isSelectable ? 'selectable-cupid' : '';
+                const extraStyle = !isSelectable ? 'style="pointer-events:none; opacity:0.6;"' : '';
+
+                gridItemsHtml += `
+                    <li class="player-card ${selectableClass} ${deadClass}" data-index="${i}" ${extraStyle}>
+                        <div class="player-info">
+                            <span class="player-name">${p.name}</span>
+                        </div>
+                    </li>
+                `;
             });
-            
+
             contentHtml = `
                 <p class="script-instruction">"Cupido (<b>${cupido.name}</b>) despierta y elige a dos enamorados."</p>
                 <ul class="dashboard-grid" id="cupid-target-grid" style="margin-top:15px;">
@@ -580,7 +602,7 @@ function renderScriptStep() {
                     card.onclick = () => {
                         const idx = card.getAttribute('data-index');
                         const nameSpan = card.querySelector('.player-name');
-                        
+
                         if (selectedCupids.includes(idx)) {
                             // Deselect
                             selectedCupids = selectedCupids.filter(id => id !== idx);
@@ -608,33 +630,59 @@ function renderScriptStep() {
                     state.assignedRoles[selectedCupids[1]].isLover = true;
                     saveState();
                     nightLog.push(`🏹 Cupido enamoró a ${state.assignedRoles[selectedCupids[0]].name} y ${state.assignedRoles[selectedCupids[1]].name}`);
-                    advanceStep();
+                    sState.step = 1.5;
+                    renderScriptStep();
                 }
             };
         } else {
-            sState.step++; 
+            sState.step++;
             renderScriptStep();
             return;
         }
+    }
+    else if (sState.step === 1.5) { // ENAMORAMIENTO
+        scriptDom.title.textContent = "El Enamoramiento";
+
+        const lovers = state.assignedRoles.filter(p => p.isLover);
+        const loversText = lovers.map(l => l.name).join(' y ');
+
+        contentHtml = `
+            <p class="script-instruction">"Cupido vuelve a dormir. Ahora (NARRADOR DISCRETAMENTE TOCA EL HOMBRO DE LOS ENAMORADOS), los enamorados abren los ojos y se reconocen en silencio..."</p>
+            <div style="background:var(--bg-card); padding:15px; border-radius:8px; margin-top:15px; text-align:center; border: 2px dashed var(--accent-crimson);">
+                <p style="margin:0; font-size:1.1rem; color:var(--text-muted);">Los enamorados son:</p>
+                <p style="margin:10px 0 0 0; font-size:1.5rem; font-family:var(--font-heading); color:var(--accent-crimson);">${loversText}</p>
+            </div>
+        `;
+        scriptDom.nextBtn.textContent = "Enamorados duermen (Siguiente)";
+        scriptDom.nextBtn.disabled = false;
+        scriptDom.nextBtn.onclick = () => {
+            sState.step = 2;
+            renderScriptStep();
+        };
     }
     else if (sState.step === 2) { // VIDENTE
         const vidente = getAlivePlayer(ROLES.VIDENTE);
         if (vidente) {
             scriptDom.title.textContent = "Turno de la Vidente";
-            
+
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
-                if (!p.isDead && p.role !== ROLES.VIDENTE) {
-                    gridItemsHtml += `
-                        <li class="player-card selectable-seer" data-index="${i}">
-                            <div class="player-info">
-                                <span class="player-name">${p.name}</span>
-                            </div>
-                        </li>
-                    `;
-                }
+                const isDead = p.isDead;
+                const isSelf = p.role === ROLES.VIDENTE;
+                const isSelectable = !isDead && !isSelf;
+                const deadClass = isDead ? 'li-dead' : '';
+                const selectableClass = isSelectable ? 'selectable-seer' : '';
+                const extraStyle = !isSelectable ? 'style="pointer-events:none; opacity:0.6;"' : '';
+
+                gridItemsHtml += `
+                    <li class="player-card ${selectableClass} ${deadClass}" data-index="${i}" ${extraStyle}>
+                        <div class="player-info">
+                            <span class="player-name">${p.name}</span>
+                        </div>
+                    </li>
+                `;
             });
-            
+
             contentHtml = `
                 <p class="script-instruction" id="seer-instruction">"La Vidente (<b>${vidente.name}</b>) despierta y señala a alguien para ver su verdadera identidad."</p>
                 <ul class="dashboard-grid" id="seer-target-grid" style="margin-top:15px;">
@@ -647,7 +695,7 @@ function renderScriptStep() {
             `;
             scriptDom.nextBtn.textContent = "Vidente duerme (Siguiente)";
             scriptDom.nextBtn.disabled = true;
-            
+
             let selectedSeerTarget = null;
 
             setTimeout(() => {
@@ -655,19 +703,19 @@ function renderScriptStep() {
                 const container = document.getElementById('seer-result-container');
                 const result = document.getElementById('seer-result');
                 const instruction = document.getElementById('seer-instruction');
-                
+
                 cards.forEach(card => {
                     card.onclick = () => {
                         const idx = card.getAttribute('data-index');
                         selectedSeerTarget = idx;
                         scriptDom.nextBtn.disabled = false;
-                        
+
                         const targetPlayer = state.assignedRoles[idx];
-                        
+
                         // Ocultar grid e instrucción
                         document.getElementById('seer-target-grid').style.display = 'none';
                         instruction.style.display = 'none';
-                        
+
                         // Mostrar el resultado enfocado
                         container.style.display = 'block';
                         result.innerHTML = `
@@ -686,7 +734,7 @@ function renderScriptStep() {
                 }
             };
         } else {
-            sState.step++; 
+            sState.step++;
             renderScriptStep();
             return;
         }
@@ -694,24 +742,29 @@ function renderScriptStep() {
     else if (sState.step === 3) { // LOBOS
         if (isAlive(ROLES.LOBO)) {
             scriptDom.title.textContent = "Turno de los Lobos";
-            
+
             // Mostrar estado de la manada
             const lobos = state.assignedRoles.filter(p => p.role === ROLES.LOBO);
             const lobosList = lobos.map(l => l.isDead ? `<span style="text-decoration:line-through; color:#aaa;">${l.name}</span>` : `<b>${l.name}</b>`).join(', ');
 
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
-                if (!p.isDead && p.role !== ROLES.LOBO) {
-                    gridItemsHtml += `
-                        <li class="player-card selectable-victim" data-index="${i}">
-                            <div class="player-info">
-                                <span class="player-name">${p.name}</span>
-                            </div>
-                        </li>
-                    `;
-                }
+                const isDead = p.isDead;
+                const isSelf = p.role === ROLES.LOBO;
+                const isSelectable = !isDead && !isSelf;
+                const deadClass = isDead ? 'li-dead' : '';
+                const selectableClass = isSelectable ? 'selectable-victim' : '';
+                const extraStyle = !isSelectable ? 'style="pointer-events:none; opacity:0.6;"' : '';
+
+                gridItemsHtml += `
+                    <li class="player-card ${selectableClass} ${deadClass}" data-index="${i}" ${extraStyle}>
+                        <div class="player-info">
+                            <span class="player-name">${p.name}</span>
+                        </div>
+                    </li>
+                `;
             });
-            
+
             const nina = getAlivePlayer(ROLES.NINA);
             const ninaText = nina ? `<br><br><span style="color:var(--accent-blue); font-weight:bold;">(Atención: La Niña (${nina.name}) puede estar observando)</span>` : '';
 
@@ -743,7 +796,7 @@ function renderScriptStep() {
                         card.style.backgroundColor = 'var(--accent-crimson)';
                         card.style.borderColor = 'var(--accent-crimson)';
                         card.style.color = '#fff';
-                        
+
                         selectedWolfTarget = card.getAttribute('data-index');
                         scriptDom.nextBtn.disabled = false;
                     };
@@ -758,7 +811,7 @@ function renderScriptStep() {
                 }
             };
         } else {
-            sState.step++; 
+            sState.step++;
             renderScriptStep();
             return;
         }
@@ -767,23 +820,29 @@ function renderScriptStep() {
         const bruja = getAlivePlayer(ROLES.BRUJA);
         if (bruja && (bruja.potions.life || bruja.potions.death)) {
             scriptDom.title.textContent = "Turno de la Bruja";
-            
+
             let victimMsg = nightVictims.length > 0 ? `Los lobos han atacado a: <br><b style="font-size:1.5rem; color:var(--accent-crimson);">${state.assignedRoles[nightVictims[0]].name}</b>` : `Los lobos no mataron a nadie.`;
-            
+
             let lifeUsedText = bruja.potions.lifeTarget ? ` (Salvó a ${bruja.potions.lifeTarget})` : ``;
             let btnLife = bruja.potions.life ? `<button class="btn-primary" id="btn-potion-life" style="width:100%; margin-bottom:10px; background:#4CAF50; border-color:#2E7D32;">Usar Poción de Vida</button>` : `<p class="hint">Poción de Vida gastada${lifeUsedText}.</p>`;
-            
+
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
-                if (!p.isDead && p.role !== ROLES.BRUJA) {
-                    gridItemsHtml += `
-                        <li class="player-card selectable-witch" data-index="${i}">
-                            <div class="player-info">
-                                <span class="player-name">${p.name}</span>
-                            </div>
-                        </li>
-                    `;
-                }
+                const isDead = p.isDead;
+                const isSelf = p.role === ROLES.BRUJA;
+                const isDying = nightVictims.includes(i);
+                const isSelectable = !isDead && !isSelf && !isDying;
+                const deadClass = isDead ? 'li-dead' : '';
+                const selectableClass = isSelectable ? 'selectable-witch' : '';
+                const extraStyle = !isSelectable ? 'style="pointer-events:none; opacity:0.6;"' : '';
+
+                gridItemsHtml += `
+                    <li class="player-card ${selectableClass} ${deadClass}" data-index="${i}" ${extraStyle}>
+                        <div class="player-info">
+                            <span class="player-name">${p.name}</span>
+                        </div>
+                    </li>
+                `;
             });
 
             let deathUsedText = bruja.potions.deathTarget ? ` (Envenenó a ${bruja.potions.deathTarget})` : ``;
@@ -809,7 +868,7 @@ function renderScriptStep() {
                 ${btnDeath}
                 <div style="margin-top:20px;"></div>
             `;
-            
+
             scriptDom.nextBtn.textContent = "Bruja duerme (Siguiente)";
             let selectedWitchTarget = null;
 
@@ -831,7 +890,7 @@ function renderScriptStep() {
                 const bDeath = document.getElementById('btn-potion-death');
                 const btnToggleDeath = document.getElementById('toggle-death-potion');
                 const deathArea = document.getElementById('witch-death-area');
-                
+
                 if (btnToggleDeath && deathArea) {
                     btnToggleDeath.onclick = () => {
                         if (deathArea.style.display === 'none') {
@@ -860,7 +919,7 @@ function renderScriptStep() {
                         }
                     };
                 }
-                
+
                 if (bDeath) {
                     const cards = document.querySelectorAll('#witch-target-grid .selectable-witch');
                     cards.forEach(card => {
@@ -873,7 +932,7 @@ function renderScriptStep() {
                             card.style.backgroundColor = 'var(--accent-crimson)';
                             card.style.borderColor = 'var(--accent-crimson)';
                             card.style.color = '#fff';
-                            
+
                             selectedWitchTarget = card.getAttribute('data-index');
                             bDeath.disabled = false;
                         };
@@ -900,14 +959,14 @@ function renderScriptStep() {
             }, 50);
 
         } else {
-            sState.step++; 
+            sState.step++;
             renderScriptStep();
             return;
         }
     }
     else if (sState.step === 5) { // AMANECER
         scriptDom.title.textContent = "Amanecer";
-        
+
         // Evitar duplicados
         const uniqueVictims = [...new Set(nightVictims)];
         let victimsNames = uniqueVictims.map(idx => state.assignedRoles[idx].name).join(' y ');
@@ -926,31 +985,46 @@ function renderScriptStep() {
             <h3 style="color:var(--accent-crimson); margin-top:20px;">${resultMsg}</h3>
             ${logHtml}
         `;
-        
+
         scriptDom.nextBtn.textContent = "Ir a Votación de la Aldea";
         scriptDom.nextBtn.onclick = () => {
+            const hunter = state.assignedRoles.find(p => p.role === ROLES.CAZADOR);
+            const wasHunterAlive = hunter && !hunter.isDead;
+
             uniqueVictims.forEach(idx => {
                 if (!state.assignedRoles[idx].isDead) {
                     executeKill(idx);
                 }
             });
-            advanceStep();
+
+            if (wasHunterAlive && hunter.isDead) {
+                sState.step = 'cazador';
+                sState.nextStepAfterHunter = 6;
+                renderScriptStep();
+            } else {
+                sState.step = 6;
+                renderScriptStep();
+            }
         };
     }
     else if (sState.step === 6) { // VOTACIÓN DE LA ALDEA
         scriptDom.title.textContent = "Votación de la Aldea";
-        
+
         let gridItemsHtml = '';
         state.assignedRoles.forEach((p, i) => {
-            if (!p.isDead) {
-                gridItemsHtml += `
-                    <li class="player-card selectable-vote" data-index="${i}">
-                        <div class="player-info">
-                            <span class="player-name">${p.name}</span>
-                        </div>
-                    </li>
-                `;
-            }
+            const isDead = p.isDead;
+            const isSelectable = !isDead;
+            const deadClass = isDead ? 'li-dead' : '';
+            const selectableClass = isSelectable ? 'selectable-vote' : '';
+            const extraStyle = !isSelectable ? 'style="pointer-events:none; opacity:0.6;"' : '';
+
+            gridItemsHtml += `
+                <li class="player-card ${selectableClass} ${deadClass}" data-index="${i}" ${extraStyle}>
+                    <div class="player-info">
+                        <span class="player-name">${p.name}</span>
+                    </div>
+                </li>
+            `;
         });
 
         contentHtml = `
@@ -974,24 +1048,106 @@ function renderScriptStep() {
                 card.onclick = () => {
                     const idx = card.getAttribute('data-index');
                     const target = state.assignedRoles[idx];
-                    
+
                     showAlert(
                         "Confirmar Linchamiento",
                         `¿La aldea ha decidido ejecutar a <b>${target.name}</b>?`,
                         "",
                         () => {
+                            const hunter = state.assignedRoles.find(p => p.role === ROLES.CAZADOR);
+                            const wasHunterAlive = hunter && !hunter.isDead;
+
                             executeKill(idx);
-                            sState.round++;
-                            sState.step = 0;
-                            saveState();
-                            startDashboard();
+
+                            if (wasHunterAlive && hunter.isDead) {
+                                sState.step = 'cazador';
+                                sState.nextStepAfterHunter = 'end_day';
+                                renderScriptStep();
+                            } else {
+                                sState.round++;
+                                sState.step = 0;
+                                saveState();
+                                startDashboard();
+                            }
                         },
-                        () => {}
+                        () => { }
                     );
                     alertDom.confirmBtn.textContent = "Aceptar";
                 };
             });
         }, 50);
+    }
+    else if (sState.step === 'cazador') { // DISPARO DEL CAZADOR
+        scriptDom.title.textContent = "La última bala del Cazador";
+        
+        let gridItemsHtml = '';
+        const hunter = state.assignedRoles.find(p => p.role === ROLES.CAZADOR);
+        
+        state.assignedRoles.forEach((p, i) => {
+            const isDead = p.isDead;
+            const isSelectable = !isDead;
+            const deadClass = isDead ? 'li-dead' : '';
+            const selectableClass = isSelectable ? 'selectable-hunter' : '';
+            const extraStyle = !isSelectable ? 'style="pointer-events:none; opacity:0.6;"' : '';
+
+            gridItemsHtml += `
+                <li class="player-card ${selectableClass} ${deadClass}" data-index="${i}" ${extraStyle}>
+                    <div class="player-info">
+                        <span class="player-name">${p.name}</span>
+                    </div>
+                </li>
+            `;
+        });
+
+        contentHtml = `
+            <p class="script-instruction">"El Cazador (<b>${hunter.name}</b>) ha muerto. En su último aliento, dispara su arma contra alguien..."</p>
+            <ul class="dashboard-grid" id="hunter-target-grid" style="margin-top:15px;">
+                ${gridItemsHtml}
+            </ul>
+        `;
+
+        scriptDom.nextBtn.textContent = "Disparar (Siguiente)";
+        scriptDom.nextBtn.disabled = true;
+
+        let selectedHunterTarget = null;
+
+        setTimeout(() => {
+            const cards = document.querySelectorAll('#hunter-target-grid .selectable-hunter');
+            cards.forEach(card => {
+                card.onclick = () => {
+                    cards.forEach(c => {
+                        c.style.backgroundColor = 'var(--bg-parchment)';
+                        c.style.borderColor = 'var(--border-ink)';
+                        c.style.color = 'var(--text-ink)';
+                    });
+                    card.style.backgroundColor = 'var(--accent-crimson)';
+                    card.style.borderColor = 'var(--accent-crimson)';
+                    card.style.color = '#fff';
+                    
+                    selectedHunterTarget = card.getAttribute('data-index');
+                    scriptDom.nextBtn.disabled = false;
+                };
+            });
+        }, 50);
+
+        scriptDom.nextBtn.onclick = () => {
+            if (selectedHunterTarget !== null) {
+                executeKill(parseInt(selectedHunterTarget));
+                
+                if (sState.nextStepAfterHunter === 'end_day') {
+                    sState.round++;
+                    sState.step = 0;
+                    saveState();
+                    startDashboard();
+                } else if (sState.nextStepAfterHunter !== undefined) {
+                    sState.step = sState.nextStepAfterHunter;
+                    sState.nextStepAfterHunter = undefined;
+                    renderScriptStep();
+                } else {
+                    startDashboard();
+                }
+            }
+        };
     }
 
     scriptDom.content.innerHTML = contentHtml;
@@ -1000,7 +1156,7 @@ function renderScriptStep() {
 
 // --- EVENT LISTENERS E INICIALIZACIÓN ---
 setupDom.addBtn.addEventListener('click', addPlayer);
-setupDom.input.addEventListener('keypress', (e) => { if(e.key === 'Enter') addPlayer(); });
+setupDom.input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addPlayer(); });
 setupDom.btnDecWolves.addEventListener('click', () => updateWolvesCount(-1));
 setupDom.btnIncWolves.addEventListener('click', () => updateWolvesCount(1));
 Object.values(setupDom.roles).forEach(chk => chk.addEventListener('change', validateSetup));
@@ -1009,7 +1165,7 @@ setupDom.distributeBtn.addEventListener('click', distributeRoles);
 // Reveal Events (Mouse and Touch)
 const cardContainer = document.querySelector('.reveal-card');
 cardContainer.addEventListener('mousedown', startHold);
-cardContainer.addEventListener('touchstart', startHold, {passive: false});
+cardContainer.addEventListener('touchstart', startHold, { passive: false });
 window.addEventListener('mouseup', endHold);
 window.addEventListener('touchend', endHold);
 revealDom.nextBtn.addEventListener('click', handleRevealNext);
@@ -1023,7 +1179,7 @@ dashDom.resetBtn.addEventListener('click', () => {
         saveState();
         showScreen('setup');
         renderSetupPlayers();
-    }, () => {});
+    }, () => { });
 });
 
 function init() {
