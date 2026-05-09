@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>El Juicio Social - El Narrador</title>
+    <title>El Juicio - El Narrador</title>
     <!-- Fuentes medievales/clásicas -->
     <link
         href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Lora:ital,wght@0,400;0,700;1,400&display=swap"
@@ -14,22 +14,30 @@
 
 <body>
     <div id="app">
+        <div class="top-banner-container">
+            <img src="src/images/foxeegames.gif" alt="FoxeeGames Banner" class="top-banner">
+        </div>
 
         <!-- PANTALLA 1: CONFIGURACIÓN -->
         <section id="setup-screen" class="screen active">
             <header class="manuscript-header">
-                <h1>El Juicio Social</h1>
+                <h1>El Juicio</h1>
                 <p class="subtitle">Crónicas del Narrador</p>
             </header>
 
             <div class="content">
-                <div class="parchment-card">
-                    <h2>Jugadores (<span id="setup-player-count">0</span>)</h2>
-                    <div class="input-group">
-                        <input type="text" id="new-player-input" placeholder="Nombre del jugador..." maxlength="20">
-                        <button id="add-player-btn" class="btn-ink">+</button>
+                <div class="parchment-card collapsible-card" id="players-card">
+                    <div class="card-header-row" onclick="toggleCollapse('players-card')">
+                        <h2>Jugadores (<span id="setup-player-count">0</span>)</h2>
+                        <button class="toggle-collapse-btn">▼</button>
                     </div>
-                    <ul id="setup-players-list" class="ink-list"></ul>
+                    <div class="collapsible-content">
+                        <div class="input-group">
+                            <input type="text" id="new-player-input" placeholder="Nombre del jugador..." maxlength="20">
+                            <button id="add-player-btn" class="btn-ink">+</button>
+                        </div>
+                        <ul id="setup-players-list" class="ink-list"></ul>
+                    </div>
                 </div>
 
                 <div class="parchment-card">
@@ -123,7 +131,7 @@
 
             <div class="actions dashboard-actions">
                 <button id="start-night-btn" class="btn-primary">Noche (Script)</button>
-                <button id="reset-game-btn" class="btn-danger" style="margin-top: 15px;">Terminar Partida (Volver al
+                <button id="reset-game-btn" class="btn-danger" style="margin-top: 5px;">Terminar Partida (Volver al
                     Lobby)</button>
             </div>
         </section>
@@ -135,11 +143,18 @@
             </header>
 
             <div class="content" id="script-content">
+
                 <!-- Contenido dinámico del paso actual -->
             </div>
 
+
+
             <div class="actions">
                 <button id="script-next-btn" class="btn-primary">Continuar</button>
+            </div>
+
+            <div class="contentFooter" id="script-contentFooter">
+
             </div>
         </section>
 
@@ -159,8 +174,9 @@
                 </div>
             </div>
         </section>
-        <!-- Logo Global FoxeeGames -->
+        <!-- Logo Global FoxeeGames 
         <img src="src/images/foxeegames.gif" alt="FoxeeGames Logo" class="watermark-logo">
+        -->
 
     </div>
 

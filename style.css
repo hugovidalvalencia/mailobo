@@ -42,6 +42,25 @@ body {
     background-color: var(--bg-parchment);
 }
 
+/* Banner Superior */
+.top-banner-container {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    text-align: center;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background-color: #d0d9f4;
+    /* Evita que el texto de abajo se encime */
+    z-index: 9999;
+}
+
+.top-banner {
+    height: 35px;
+    /* Tamaño discreto */
+    opacity: 0.7;
+}
+
 .screen {
     display: none;
     flex-direction: column;
@@ -60,19 +79,19 @@ body {
 /* Encabezados Manuscrito */
 .manuscript-header {
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 5px;
     padding-bottom: 15px;
     border-bottom: 3px double var(--accent-gold);
     position: relative;
 }
 
 .manuscript-header::after {
-    content: "❦";
+    content: "o";
     position: absolute;
     bottom: -12px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--bg-parchment);
+    /*background: var(--bg-parchment);*/
     padding: 0 10px;
     color: var(--accent-crimson);
     font-size: 1.2rem;
@@ -130,6 +149,41 @@ body {
     margin-bottom: 15px;
     border-bottom: 1px solid var(--border-ink);
     padding-bottom: 5px;
+}
+
+/* Elementos Colapsables */
+.collapsible-card .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.collapsible-card h2 {
+    margin-bottom: 0 !important;
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+}
+
+.toggle-collapse-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--accent-crimson);
+    transition: transform 0.3s;
+    cursor: pointer;
+}
+
+.collapsible-card.collapsed .toggle-collapse-btn {
+    transform: rotate(-90deg);
+}
+
+.collapsible-card.collapsed .collapsible-content {
+    display: none;
+}
+
+.collapsible-card.collapsed {
+    padding-bottom: 15px;
 }
 
 /* Inputs y Listas */
@@ -259,8 +313,8 @@ input[type="text"]:focus {
 
 /* Botones Principales */
 .actions {
-    margin-top: -25%;
-    padding: 100px 0;
+    margin-top: -1%;
+    padding: 50px 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -632,23 +686,26 @@ input[type="text"]:focus {
     background-color: var(--bg-parchment) !important;
 }
 
-/* Logo Global Watermark */
+.contentFooter {
+    margin-top: -10%;
+}
+
+/* Logo Global Watermark 
 .watermark-logo {
     position: fixed;
-    top: 93%;
+    top: 30%;
     left: 50%;
     transform: translateX(-50%);
     width: 165px;
     /* Triple del tamaño anterior (180px) */
-    height: auto;
-    opacity: 0.7;
-    /* Ligeramente transparente */
-    z-index: 9999;
+/*height: auto;
+    opacity: 0.15;*/
+/* Ligeramente transparente */
+/* z-index: 9999;
     pointer-events: none;
     /* Evita que bloquee clics en botones de la interfaz */
-    border-radius: 8px;
+/*border-radius: 8px;
     /* Opcional por si tiene esquinas rectas */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    /* Ligera sombra para separar del fondo */
-    transition: opacity 0.3s;
-}
+
+/*transition: opacity 0.3s;
+}*/

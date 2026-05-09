@@ -104,7 +104,7 @@ function loadState() {
     const saved = localStorage.getItem('maiLoboState');
     if (saved) {
         state = JSON.parse(saved);
-        
+
         // Migración de datos viejos a la nueva nomenclatura
         if (state.rolesCount) {
             if (state.rolesCount.wolves !== undefined) {
@@ -132,7 +132,7 @@ function loadState() {
                 delete state.rolesCount.nina;
             }
         }
-        
+
         // Migración de la lista de roles asignados
         if (state.assignedRoles) {
             state.assignedRoles.forEach(p => {
@@ -152,6 +152,13 @@ function loadState() {
 function showScreen(screenName) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[screenName].classList.add('active');
+}
+
+function toggleCollapse(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.toggle('collapsed');
+    }
 }
 
 // --- CONFIGURACIÓN (SETUP) ---
@@ -558,7 +565,8 @@ function checkWinCondition() {
 const scriptDom = {
     title: document.getElementById('script-title'),
     content: document.getElementById('script-content'),
-    nextBtn: document.getElementById('script-next-btn')
+    nextBtn: document.getElementById('script-next-btn'),
+    contentFooter: document.getElementById('script-contentFooter')
 };
 
 let nightVictims = []; // Acumula muertos de la noche
@@ -576,11 +584,12 @@ function renderScriptStep() {
     const sState = state.nightScriptState;
     const isFirstNight = sState.round === 1;
     let contentHtml = '';
+    let contentFooterHtml = '';
 
     // Aplicar color de fondo según el paso actual
     const screen = document.getElementById('script-screen');
     screen.classList.remove('bg-stage-eros', 'bg-stage-bestias', 'bg-stage-hechicera', 'bg-stage-oraculo', 'bg-stage-guardian', 'bg-stage-votacion', 'bg-stage-default');
-    
+
     if (sState.step === 1 || sState.step === 1.5) screen.classList.add('bg-stage-eros');
     else if (sState.step === 2) screen.classList.add('bg-stage-oraculo');
     else if (sState.step === 3) screen.classList.add('bg-stage-bestias');
@@ -632,10 +641,14 @@ function renderScriptStep() {
                 <ul class="dashboard-grid" id="cupid-target-grid" style="margin-top:15px;">
                     ${gridItemsHtml}
                 </ul>
-                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">💘</div>
             `;
             scriptDom.nextBtn.textContent = "Confirmar Enamorados";
             scriptDom.nextBtn.disabled = true;
+
+            contentFooterHtml = `
+                <div class="contentFooter" style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">💘</div>
+            `;
+
 
             let selectedCupids = [];
 
@@ -706,7 +719,7 @@ function renderScriptStep() {
     else if (sState.step === 2) { // VIDENTE
         const oraculo = getAlivePlayer(ROLES.ORACULO);
         if (oraculo) {
-            scriptDom.title.textContent = "Turno de el OrÃ¡culo";
+            scriptDom.title.textContent = "Turno de el Oráculo";
 
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
@@ -727,18 +740,21 @@ function renderScriptStep() {
             });
 
             contentHtml = `
-                <p class="script-instruction" id="seer-instruction">"El OrÃ¡culo (<b>${oraculo.name}</b>) despierta y señala a alguien para ver su verdadera identidad."</p>
+                <p class="script-instruction" id="seer-instruction">"El Oráculo (<b>${oraculo.name}</b>) despierta y señala a alguien para ver su verdadera identidad."</p>
                 <ul class="dashboard-grid" id="seer-target-grid" style="margin-top:15px;">
                     ${gridItemsHtml}
                 </ul>
                 <div id="seer-result-container" style="display:none; margin-top:20px; background: var(--bg-card); padding: 25px; border: 3px double var(--accent-gold); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                     <p style="margin:0 0 15px 0; color:var(--text-muted); font-style:italic; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:10px;">La identidad revelada es:</p>
                     <div id="seer-result" style="margin:0;"></div>
-                </div>
+                </div>  
+            `;
+            scriptDom.nextBtn.textContent = "Oráculo duerme (Siguiente)";
+            scriptDom.nextBtn.disabled = true;
+
+            contentFooterHtml = `
                 <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🔮👁️</div>
             `;
-            scriptDom.nextBtn.textContent = "OrÃ¡culo duerme (Siguiente)";
-            scriptDom.nextBtn.disabled = true;
 
             let selectedSeerTarget = null;
 
@@ -773,7 +789,7 @@ function renderScriptStep() {
             scriptDom.nextBtn.onclick = () => {
                 if (selectedSeerTarget !== null) {
                     const targetPlayer = state.assignedRoles[selectedSeerTarget];
-                    nightLog.push(`👁️ El OrÃ¡culo vio a ${targetPlayer.name} (${targetPlayer.role})`);
+                    nightLog.push(`👁️ El Oráculo vio a ${targetPlayer.name} (${targetPlayer.role})`);
                     advanceStep();
                 }
             };
@@ -820,10 +836,14 @@ function renderScriptStep() {
                 <ul class="dashboard-grid" id="wolves-target-grid" style="margin-top:15px;">
                     ${gridItemsHtml}
                 </ul>
-                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🐾🐺</div>
+                
             `;
             scriptDom.nextBtn.textContent = "Bestias duermen (Siguiente)";
             scriptDom.nextBtn.disabled = true; // Deshabilitado hasta que elija
+
+            contentFooterHtml = `
+                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🐾🐺</div>
+            `;
 
             let selectedWolfTarget = null;
 
@@ -911,11 +931,14 @@ function renderScriptStep() {
                 <div style="margin-bottom:20px; background:var(--bg-card); padding:15px; border-radius:8px;">${victimMsg}</div>
                 ${btnLife}
                 ${btnDeath}
-                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🧪✨</div>
             `;
 
             scriptDom.nextBtn.textContent = "Hechicera duerme (Siguiente)";
             let selectedWitchTarget = null;
+
+            contentFooterHtml = `
+                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🧪✨</div>
+            `;
 
             scriptDom.nextBtn.onclick = () => {
                 // Auto-aplicar la poción de muerte si dejaron una opción seleccionada pero no clickearon el botón de Usar
@@ -1073,7 +1096,7 @@ function renderScriptStep() {
         });
 
         contentHtml = `
-            <p class="script-instruction">"La aldea debate quién es el lobo. Elige a alguien para ejecutar o termina la ronda si no hay linchamiento."</p>
+            <p class="script-instruction">"La aldea debate quién es la bestia. Elige a alguien para ejecutar o termina la ronda si no hay linchamiento."</p>
             <ul class="dashboard-grid" id="vote-target-grid" style="margin-top:15px;">
                 ${gridItemsHtml}
             </ul>
@@ -1124,10 +1147,10 @@ function renderScriptStep() {
     }
     else if (sState.step === 'guardian') { // DISPARO DEL CAZADOR
         scriptDom.title.textContent = "La última bala del Guardián";
-        
+
         let gridItemsHtml = '';
         const hunter = state.assignedRoles.find(p => p.role === ROLES.GUARDIAN);
-        
+
         state.assignedRoles.forEach((p, i) => {
             const isDead = p.isDead;
             const isSelectable = !isDead;
@@ -1149,11 +1172,15 @@ function renderScriptStep() {
             <ul class="dashboard-grid" id="hunter-target-grid" style="margin-top:15px;">
                 ${gridItemsHtml}
             </ul>
-            <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🏹🛡️</div>
+            
         `;
 
         scriptDom.nextBtn.textContent = "Disparar (Siguiente)";
         scriptDom.nextBtn.disabled = true;
+
+        contentFooterHtml = `
+               <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🏹🛡️</div>
+            `;
 
         let selectedHunterTarget = null;
 
@@ -1169,7 +1196,7 @@ function renderScriptStep() {
                     card.style.backgroundColor = 'var(--accent-crimson)';
                     card.style.borderColor = 'var(--accent-crimson)';
                     card.style.color = '#fff';
-                    
+
                     selectedHunterTarget = card.getAttribute('data-index');
                     scriptDom.nextBtn.disabled = false;
                 };
@@ -1179,7 +1206,7 @@ function renderScriptStep() {
         scriptDom.nextBtn.onclick = () => {
             if (selectedHunterTarget !== null) {
                 executeKill(parseInt(selectedHunterTarget));
-                
+
                 if (sState.nextStepAfterHunter === 'end_day') {
                     sState.round++;
                     sState.step = 0;
@@ -1197,6 +1224,7 @@ function renderScriptStep() {
     }
 
     scriptDom.content.innerHTML = contentHtml;
+    scriptDom.contentFooter.innerHTML = contentFooterHtml;
 }
 
 
