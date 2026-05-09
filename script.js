@@ -2,40 +2,40 @@
 let state = {
     players: [],       // Lista de nombres
     rolesCount: {
-        wolves: 1,
-        vidente: true,
-        bruja: true,
-        cazador: false,
-        cupido: false,
-        nina: false
+        bestias: 1,
+        oraculo: true,
+        hechicera: true,
+        guardian: false,
+        eros: false,
+        espia: false
     },
     gameStarted: false,
     assignedRoles: [], // { name, role, isDead, isLover, potions: {life: true, death: true} }
     revealIndex: 0,
     nightScriptState: {
         round: 1,
-        step: 0 // 0: inicio, 1: cupido, 2: vidente, 3: lobos, 4: bruja, 5: amanecer
+        step: 0 // 0: inicio, 1: eros, 2: oraculo, 3: bestias, 4: hechicera, 5: amanecer
     }
 };
 
 const ROLES = {
-    ALDEANO: 'Aldeano',
-    LOBO: 'Lobo',
-    VIDENTE: 'Vidente',
-    BRUJA: 'Bruja',
-    CAZADOR: 'Cazador',
-    CUPIDO: 'Cupido',
-    NINA: 'Niña'
+    CAMPESINO: 'Campesino',
+    BESTIA: 'Bestia',
+    ORACULO: 'Oráculo',
+    HECHICERA: 'Hechicera',
+    GUARDIAN: 'Guardián',
+    EROS: 'Eros',
+    ESPIA: 'Espía'
 };
 
 const ROLE_DESCRIPTIONS = {
-    [ROLES.ALDEANO]: "Tu objetivo es descubrir a los lobos y eliminarlos en las votaciones de día. Eres la fuerza principal del pueblo.",
-    [ROLES.LOBO]: "Por la noche, elige junto a tu manada a un aldeano para devorar. Miente y fíngete aldeano de día para sobrevivir.",
-    [ROLES.VIDENTE]: "Cada noche despiertas para señalar a alguien y descubrir su verdadera identidad secreta.",
-    [ROLES.BRUJA]: "Tienes dos pociones de un solo uso: una de vida para salvar a alguien del ataque de los lobos, y otra de muerte para eliminar a quien desees.",
-    [ROLES.CAZADOR]: "Si mueres de noche o de día, en tu último aliento podrás disparar y llevarte a otro jugador contigo a la tumba.",
-    [ROLES.CUPIDO]: "La primera noche eliges a dos jugadores para que se enamoren profundamente. Si uno muere, el otro morirá de tristeza.",
-    [ROLES.NINA]: "Puedes espiar en la noche de los lobos. Cuidado, si ellos te descubren espiando, tú serás la próxima víctima."
+    [ROLES.CAMPESINO]: "Tu objetivo es descubrir a las bestias y eliminarlos en las votaciones de día. Eres la fuerza principal del pueblo.",
+    [ROLES.BESTIA]: "Por la noche, elige junto a tu manada a un campesino para devorar. Miente y fíngete campesino de día para sobrevivir.",
+    [ROLES.ORACULO]: "Cada noche despiertas para señalar a alguien y descubrir su verdadera identidad secreta.",
+    [ROLES.HECHICERA]: "Tienes dos pociones de un solo uso: una de vida para salvar a alguien del ataque de las bestias, y otra de muerte para eliminar a quien desees.",
+    [ROLES.GUARDIAN]: "Si mueres de noche o de día, en tu último aliento podrás disparar y llevarte a otro jugador contigo a la tumba.",
+    [ROLES.EROS]: "La primera noche eliges a dos jugadores para que se enamoren profundamente. Si uno muere, el otro morirá de tristeza.",
+    [ROLES.ESPIA]: "Puedes espiar en la noche de las bestias. Cuidado, si ellos te descubren espiando, tú serás la próxima víctima."
 };
 
 // --- ELEMENTOS DOM ---
@@ -57,11 +57,11 @@ const setupDom = {
     btnIncWolves: document.getElementById('inc-wolves'),
     distributeBtn: document.getElementById('distribute-roles-btn'),
     roles: {
-        vidente: document.getElementById('role-vidente'),
-        bruja: document.getElementById('role-bruja'),
-        cazador: document.getElementById('role-cazador'),
-        cupido: document.getElementById('role-cupido'),
-        nina: document.getElementById('role-nina')
+        oraculo: document.getElementById('role-oraculo'),
+        hechicera: document.getElementById('role-hechicera'),
+        guardian: document.getElementById('role-guardian'),
+        eros: document.getElementById('role-eros'),
+        espia: document.getElementById('role-espia')
     }
 };
 
@@ -80,8 +80,8 @@ const revealDom = {
 // Esto no reemplaza todo el archivo, solo este bloque. Wait, StartLine is 68. Let's do it carefully.
 
 const dashDom = {
-    lobosCount: document.getElementById('dash-lobos-count'),
-    aldeanosCount: document.getElementById('dash-aldeanos-count'),
+    bestiasCount: document.getElementById('dash-bestias-count'),
+    campesinosCount: document.getElementById('dash-campesinos-count'),
     list: document.getElementById('dashboard-players-list'),
     startNightBtn: document.getElementById('start-night-btn'),
     resetBtn: document.getElementById('reset-game-btn')
@@ -104,6 +104,47 @@ function loadState() {
     const saved = localStorage.getItem('maiLoboState');
     if (saved) {
         state = JSON.parse(saved);
+        
+        // Migración de datos viejos a la nueva nomenclatura
+        if (state.rolesCount) {
+            if (state.rolesCount.wolves !== undefined) {
+                state.rolesCount.bestias = state.rolesCount.wolves;
+                delete state.rolesCount.wolves;
+            }
+            if (state.rolesCount.vidente !== undefined) {
+                state.rolesCount.oraculo = state.rolesCount.vidente;
+                delete state.rolesCount.vidente;
+            }
+            if (state.rolesCount.bruja !== undefined) {
+                state.rolesCount.hechicera = state.rolesCount.bruja;
+                delete state.rolesCount.bruja;
+            }
+            if (state.rolesCount.cazador !== undefined) {
+                state.rolesCount.guardian = state.rolesCount.cazador;
+                delete state.rolesCount.cazador;
+            }
+            if (state.rolesCount.cupido !== undefined) {
+                state.rolesCount.eros = state.rolesCount.cupido;
+                delete state.rolesCount.cupido;
+            }
+            if (state.rolesCount.nina !== undefined) {
+                state.rolesCount.espia = state.rolesCount.nina;
+                delete state.rolesCount.nina;
+            }
+        }
+        
+        // Migración de la lista de roles asignados
+        if (state.assignedRoles) {
+            state.assignedRoles.forEach(p => {
+                if (p.role === 'Lobo') p.role = 'Bestia';
+                if (p.role === 'Aldeano') p.role = 'Campesino';
+                if (p.role === 'Vidente') p.role = 'Oráculo';
+                if (p.role === 'Bruja') p.role = 'Hechicera';
+                if (p.role === 'Cazador') p.role = 'Guardián';
+                if (p.role === 'Cupido') p.role = 'Eros';
+                if (p.role === 'Niña') p.role = 'Espía';
+            });
+        }
     }
 }
 
@@ -142,9 +183,9 @@ function removePlayer(index) {
 }
 
 function updateWolvesCount(change) {
-    const newVal = state.rolesCount.wolves + change;
+    const newVal = state.rolesCount.bestias + change;
     if (newVal >= 1 && newVal <= 10) {
-        state.rolesCount.wolves = newVal;
+        state.rolesCount.bestias = newVal;
         setupDom.wolvesCount.textContent = newVal;
         saveState();
         validateSetup();
@@ -153,13 +194,13 @@ function updateWolvesCount(change) {
 
 function validateSetup() {
     let specialCount = 0;
-    if (setupDom.roles.vidente.checked) specialCount++;
-    if (setupDom.roles.bruja.checked) specialCount++;
-    if (setupDom.roles.cazador.checked) specialCount++;
-    if (setupDom.roles.cupido.checked) specialCount++;
-    if (setupDom.roles.nina.checked) specialCount++;
+    if (setupDom.roles.oraculo.checked) specialCount++;
+    if (setupDom.roles.hechicera.checked) specialCount++;
+    if (setupDom.roles.guardian.checked) specialCount++;
+    if (setupDom.roles.eros.checked) specialCount++;
+    if (setupDom.roles.espia.checked) specialCount++;
 
-    const totalRolesNeeded = state.rolesCount.wolves + specialCount;
+    const totalRolesNeeded = state.rolesCount.bestias + specialCount;
     const canStart = state.players.length >= Math.max(3, totalRolesNeeded);
 
     setupDom.distributeBtn.disabled = !canStart;
@@ -167,22 +208,22 @@ function validateSetup() {
 
 // --- ASIGNACIÓN DE ROLES ---
 function distributeRoles() {
-    state.rolesCount.vidente = setupDom.roles.vidente.checked;
-    state.rolesCount.bruja = setupDom.roles.bruja.checked;
-    state.rolesCount.cazador = setupDom.roles.cazador.checked;
-    state.rolesCount.cupido = setupDom.roles.cupido.checked;
-    state.rolesCount.nina = setupDom.roles.nina.checked;
+    state.rolesCount.oraculo = setupDom.roles.oraculo.checked;
+    state.rolesCount.hechicera = setupDom.roles.hechicera.checked;
+    state.rolesCount.guardian = setupDom.roles.guardian.checked;
+    state.rolesCount.eros = setupDom.roles.eros.checked;
+    state.rolesCount.espia = setupDom.roles.espia.checked;
 
     let pool = [];
-    for (let i = 0; i < state.rolesCount.wolves; i++) pool.push(ROLES.LOBO);
-    if (state.rolesCount.vidente) pool.push(ROLES.VIDENTE);
-    if (state.rolesCount.bruja) pool.push(ROLES.BRUJA);
-    if (state.rolesCount.cazador) pool.push(ROLES.CAZADOR);
-    if (state.rolesCount.cupido) pool.push(ROLES.CUPIDO);
-    if (state.rolesCount.nina) pool.push(ROLES.NINA);
+    for (let i = 0; i < state.rolesCount.bestias; i++) pool.push(ROLES.BESTIA);
+    if (state.rolesCount.oraculo) pool.push(ROLES.ORACULO);
+    if (state.rolesCount.hechicera) pool.push(ROLES.HECHICERA);
+    if (state.rolesCount.guardian) pool.push(ROLES.GUARDIAN);
+    if (state.rolesCount.eros) pool.push(ROLES.EROS);
+    if (state.rolesCount.espia) pool.push(ROLES.ESPIA);
 
     while (pool.length < state.players.length) {
-        pool.push(ROLES.ALDEANO);
+        pool.push(ROLES.CAMPESINO);
     }
 
     // Shuffle pool
@@ -199,7 +240,7 @@ function distributeRoles() {
         role: pool[idx],
         isDead: false,
         isLover: false,
-        potions: pool[idx] === ROLES.BRUJA ? { life: true, death: true } : null
+        potions: pool[idx] === ROLES.HECHICERA ? { life: true, death: true } : null
     }));
 
     state.gameStarted = true;
@@ -283,12 +324,12 @@ function startDashboard() {
 function renderDashboard() {
     dashDom.list.innerHTML = '';
     let wolvesCount = 0;
-    let aldeanosCount = 0;
+    let campesinosCount = 0;
 
     state.assignedRoles.forEach((p, index) => {
         if (!p.isDead) {
-            if (p.role === ROLES.LOBO) wolvesCount++;
-            else aldeanosCount++;
+            if (p.role === ROLES.BESTIA) wolvesCount++;
+            else campesinosCount++;
         }
 
         const li = document.createElement('li');
@@ -299,7 +340,7 @@ function renderDashboard() {
         li.onclick = () => showPlayerAction(index);
 
         const heartBadge = p.isLover ? `<div class="lover-badge">&lt;3</div>` : '';
-        const wolfBadge = p.role === ROLES.LOBO ? `<div class="wolf-badge">🐺</div>` : '';
+        const wolfBadge = p.role === ROLES.BESTIA ? `<div class="wolf-badge">🐺</div>` : '';
 
         li.innerHTML = `
             ${heartBadge}
@@ -312,15 +353,16 @@ function renderDashboard() {
         dashDom.list.appendChild(li);
     });
 
-    dashDom.lobosCount.textContent = wolvesCount;
-    dashDom.aldeanosCount.textContent = aldeanosCount;
+    dashDom.bestiasCount.textContent = wolvesCount;
+    dashDom.campesinosCount.textContent = campesinosCount;
 }
 
 function showPlayerAction(index) {
     const p = state.assignedRoles[index];
+    const roleDesc = ROLE_DESCRIPTIONS[p.role] || '';
 
     // Estilo del rol para el mensaje
-    const roleHtml = `<span style="color:var(--accent-gold); font-family:var(--font-heading); font-size:1.3rem; display:block; margin-top:5px;">${p.role}</span>`;
+    const roleHtml = `<span style="color:var(--accent-gold); font-family:var(--font-heading); font-size:1.3rem; display:block; margin-top:5px;">${p.role}</span><p style="font-size:0.9rem; font-style:italic; color:var(--text-muted); margin-top:5px;">${roleDesc}</p>`;
 
     // Si es un enamorado muerto, su destino está sellado (no se puede revivir individualmente)
     if (p.isDead && p.isLover) {
@@ -336,7 +378,7 @@ function showPlayerAction(index) {
         return;
     }
 
-    const action = !p.isDead ? "Matar" : "Revivir";
+    const action = !p.isDead ? "Eliminar" : "Revivir";
     showAlert(
         p.name,
         roleHtml,
@@ -385,8 +427,8 @@ function showAlert(title, message, areaHtml, onConfirm, onCancel = null) {
 function manualKill(index) {
     const player = state.assignedRoles[index];
 
-    // Si es Cazador, abrir alerta intermedia con MATRIZ
-    if (player.role === ROLES.CAZADOR) {
+    // Si es GuardiÃ¡n, abrir alerta intermedia con MATRIZ
+    if (player.role === ROLES.GUARDIAN) {
         // Marcamos muerto de inmediato para consistencia
         player.isDead = true;
         saveState();
@@ -409,8 +451,8 @@ function manualKill(index) {
         });
 
         showAlert(
-            "Tiro del Cazador",
-            `El Cazador (<b>${player.name}</b>) ha muerto. Debe elegir a quién disparar su tiro de gracia.`,
+            "Tiro del GuardiÃ¡n",
+            `El GuardiÃ¡n (<b>${player.name}</b>) ha muerto. Debe elegir a quién disparar su tiro de gracia.`,
             `<ul class="dashboard-grid" id="hunter-target-grid" style="grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top:10px;">
                 ${gridItemsHtml}
             </ul>`,
@@ -425,7 +467,7 @@ function manualKill(index) {
             () => { checkWinCondition(); }
         );
 
-        // Lógica de selección en la matriz del cazador
+        // Lógica de selección en la matriz del GuardiÃ¡n
         setTimeout(() => {
             const cards = document.querySelectorAll('.selectable-hunter-target');
             cards.forEach(card => {
@@ -457,7 +499,7 @@ function executeKill(index) {
     saveState();
     renderDashboard();
 
-    // Regla: Enamorados (Cupido)
+    // Regla: Enamorados (Eros)
     if (player.isLover) {
         const otherIdx = state.assignedRoles.findIndex((p, i) => p.isLover && i !== index && !p.isDead);
         if (otherIdx !== -1) {
@@ -467,13 +509,13 @@ function executeKill(index) {
             renderDashboard();
 
             showAlert(
-                "Despecho de Cupido",
+                "Despecho de Eros",
                 `${player.name} era un enamorado. Su pareja, ${otherLover.name}, debe morir de tristeza.`,
                 "",
                 () => {
-                    // Si el segundo enamorado era el Cazador, NO usar manualKill si estamos en el script
+                    // Si el segundo enamorado era el GuardiÃ¡n, NO usar manualKill si estamos en el script
                     const inScript = screens.script.classList.contains('active');
-                    if (otherLover.role === ROLES.CAZADOR && !inScript) {
+                    if (otherLover.role === ROLES.GUARDIAN && !inScript) {
                         manualKill(otherIdx);
                     }
                     checkWinCondition();
@@ -498,15 +540,15 @@ function checkWinCondition() {
 
     state.assignedRoles.forEach(p => {
         if (!p.isDead) {
-            if (p.role === ROLES.LOBO) wolves++;
+            if (p.role === ROLES.BESTIA) wolves++;
             else nonWolves++;
         }
     });
 
     if (wolves === 0 && nonWolves > 0) {
-        showAlert("¡Fin del Juego!", "Los Aldeanos han eliminado a todos los lobos. ¡La Aldea Gana!", "", () => { });
+        showAlert("¡Fin del Juego!", "Los campesinos han eliminado a todos las bestias. ¡La Aldea Gana!", "", () => { });
     } else if (nonWolves === 0 && wolves > 0) {
-        showAlert("¡Fin del Juego!", "Los Lobos han eliminado a todos los aldeanos. ¡Los Lobos Ganan!", "", () => { });
+        showAlert("¡Fin del Juego!", "las bestias han eliminado a todos los campesinos. ¡las bestias Ganan!", "", () => { });
     } else if (wolves === 0 && nonWolves === 0) {
         showAlert("¡Fin del Juego!", "Nadie ha sobrevivido a la masacre. ¡Es un Empate!", "", () => { });
     }
@@ -537,14 +579,14 @@ function renderScriptStep() {
 
     // Aplicar color de fondo según el paso actual
     const screen = document.getElementById('script-screen');
-    screen.classList.remove('bg-stage-cupido', 'bg-stage-lobos', 'bg-stage-bruja', 'bg-stage-vidente', 'bg-stage-cazador', 'bg-stage-votacion', 'bg-stage-default');
+    screen.classList.remove('bg-stage-eros', 'bg-stage-bestias', 'bg-stage-hechicera', 'bg-stage-oraculo', 'bg-stage-guardian', 'bg-stage-votacion', 'bg-stage-default');
     
-    if (sState.step === 1 || sState.step === 1.5) screen.classList.add('bg-stage-cupido');
-    else if (sState.step === 2) screen.classList.add('bg-stage-vidente');
-    else if (sState.step === 3) screen.classList.add('bg-stage-lobos');
-    else if (sState.step === 4) screen.classList.add('bg-stage-bruja');
+    if (sState.step === 1 || sState.step === 1.5) screen.classList.add('bg-stage-eros');
+    else if (sState.step === 2) screen.classList.add('bg-stage-oraculo');
+    else if (sState.step === 3) screen.classList.add('bg-stage-bestias');
+    else if (sState.step === 4) screen.classList.add('bg-stage-hechicera');
     else if (sState.step === 6) screen.classList.add('bg-stage-votacion');
-    else if (sState.step === 'cazador') screen.classList.add('bg-stage-cazador');
+    else if (sState.step === 'guardian') screen.classList.add('bg-stage-guardian');
     else screen.classList.add('bg-stage-default');
 
     // Utilidades
@@ -563,14 +605,14 @@ function renderScriptStep() {
         scriptDom.nextBtn.onclick = advanceStep;
     }
     else if (sState.step === 1) { // CUPIDO
-        const cupido = getAlivePlayer(ROLES.CUPIDO);
-        if (isFirstNight && cupido) {
-            scriptDom.title.textContent = "Turno de Cupido";
+        const eros = getAlivePlayer(ROLES.EROS);
+        if (isFirstNight && eros) {
+            scriptDom.title.textContent = "Turno de Eros";
 
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
                 const isDead = p.isDead;
-                const isSelf = p.role === ROLES.CUPIDO;
+                const isSelf = p.role === ROLES.EROS;
                 const isSelectable = !isDead && !isSelf;
                 const deadClass = isDead ? 'li-dead' : '';
                 const selectableClass = isSelectable ? 'selectable-cupid' : '';
@@ -586,10 +628,11 @@ function renderScriptStep() {
             });
 
             contentHtml = `
-                <p class="script-instruction">"Cupido (<b>${cupido.name}</b>) despierta y elige a dos enamorados."</p>
+                <p class="script-instruction">"Eros (<b>${eros.name}</b>) despierta y elige a dos enamorados."</p>
                 <ul class="dashboard-grid" id="cupid-target-grid" style="margin-top:15px;">
                     ${gridItemsHtml}
                 </ul>
+                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">💘</div>
             `;
             scriptDom.nextBtn.textContent = "Confirmar Enamorados";
             scriptDom.nextBtn.disabled = true;
@@ -629,7 +672,7 @@ function renderScriptStep() {
                     state.assignedRoles[selectedCupids[0]].isLover = true;
                     state.assignedRoles[selectedCupids[1]].isLover = true;
                     saveState();
-                    nightLog.push(`🏹 Cupido enamoró a ${state.assignedRoles[selectedCupids[0]].name} y ${state.assignedRoles[selectedCupids[1]].name}`);
+                    nightLog.push(`🏹 Eros enamoró a ${state.assignedRoles[selectedCupids[0]].name} y ${state.assignedRoles[selectedCupids[1]].name}`);
                     sState.step = 1.5;
                     renderScriptStep();
                 }
@@ -647,7 +690,7 @@ function renderScriptStep() {
         const loversText = lovers.map(l => l.name).join(' y ');
 
         contentHtml = `
-            <p class="script-instruction">"Cupido vuelve a dormir. Ahora (NARRADOR DISCRETAMENTE TOCA EL HOMBRO DE LOS ENAMORADOS), los enamorados abren los ojos y se reconocen en silencio..."</p>
+            <p class="script-instruction">"Eros vuelve a dormir. Ahora (NARRADOR DISCRETAMENTE TOCA EL HOMBRO DE LOS ENAMORADOS), los enamorados abren los ojos y se reconocen en silencio..."</p>
             <div style="background:var(--bg-card); padding:15px; border-radius:8px; margin-top:15px; text-align:center; border: 2px dashed var(--accent-crimson);">
                 <p style="margin:0; font-size:1.1rem; color:var(--text-muted);">Los enamorados son:</p>
                 <p style="margin:10px 0 0 0; font-size:1.5rem; font-family:var(--font-heading); color:var(--accent-crimson);">${loversText}</p>
@@ -661,14 +704,14 @@ function renderScriptStep() {
         };
     }
     else if (sState.step === 2) { // VIDENTE
-        const vidente = getAlivePlayer(ROLES.VIDENTE);
-        if (vidente) {
-            scriptDom.title.textContent = "Turno de la Vidente";
+        const oraculo = getAlivePlayer(ROLES.ORACULO);
+        if (oraculo) {
+            scriptDom.title.textContent = "Turno de el OrÃ¡culo";
 
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
                 const isDead = p.isDead;
-                const isSelf = p.role === ROLES.VIDENTE;
+                const isSelf = p.role === ROLES.ORACULO;
                 const isSelectable = !isDead && !isSelf;
                 const deadClass = isDead ? 'li-dead' : '';
                 const selectableClass = isSelectable ? 'selectable-seer' : '';
@@ -684,7 +727,7 @@ function renderScriptStep() {
             });
 
             contentHtml = `
-                <p class="script-instruction" id="seer-instruction">"La Vidente (<b>${vidente.name}</b>) despierta y señala a alguien para ver su verdadera identidad."</p>
+                <p class="script-instruction" id="seer-instruction">"El OrÃ¡culo (<b>${oraculo.name}</b>) despierta y señala a alguien para ver su verdadera identidad."</p>
                 <ul class="dashboard-grid" id="seer-target-grid" style="margin-top:15px;">
                     ${gridItemsHtml}
                 </ul>
@@ -692,8 +735,9 @@ function renderScriptStep() {
                     <p style="margin:0 0 15px 0; color:var(--text-muted); font-style:italic; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:10px;">La identidad revelada es:</p>
                     <div id="seer-result" style="margin:0;"></div>
                 </div>
+                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🔮👁️</div>
             `;
-            scriptDom.nextBtn.textContent = "Vidente duerme (Siguiente)";
+            scriptDom.nextBtn.textContent = "OrÃ¡culo duerme (Siguiente)";
             scriptDom.nextBtn.disabled = true;
 
             let selectedSeerTarget = null;
@@ -729,7 +773,7 @@ function renderScriptStep() {
             scriptDom.nextBtn.onclick = () => {
                 if (selectedSeerTarget !== null) {
                     const targetPlayer = state.assignedRoles[selectedSeerTarget];
-                    nightLog.push(`👁️ La Vidente vio a ${targetPlayer.name} (${targetPlayer.role})`);
+                    nightLog.push(`👁️ El OrÃ¡culo vio a ${targetPlayer.name} (${targetPlayer.role})`);
                     advanceStep();
                 }
             };
@@ -740,17 +784,17 @@ function renderScriptStep() {
         }
     }
     else if (sState.step === 3) { // LOBOS
-        if (isAlive(ROLES.LOBO)) {
-            scriptDom.title.textContent = "Turno de los Lobos";
+        if (isAlive(ROLES.BESTIA)) {
+            scriptDom.title.textContent = "Turno de las bestias";
 
             // Mostrar estado de la manada
-            const lobos = state.assignedRoles.filter(p => p.role === ROLES.LOBO);
-            const lobosList = lobos.map(l => l.isDead ? `<span style="text-decoration:line-through; color:#aaa;">${l.name}</span>` : `<b>${l.name}</b>`).join(', ');
+            const bestias = state.assignedRoles.filter(p => p.role === ROLES.BESTIA);
+            const bestiasList = bestias.map(l => l.isDead ? `<span style="text-decoration:line-through; color:#aaa;">${l.name}</span>` : `<b>${l.name}</b>`).join(', ');
 
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
                 const isDead = p.isDead;
-                const isSelf = p.role === ROLES.LOBO;
+                const isSelf = p.role === ROLES.BESTIA;
                 const isSelectable = !isDead && !isSelf;
                 const deadClass = isDead ? 'li-dead' : '';
                 const selectableClass = isSelectable ? 'selectable-victim' : '';
@@ -765,19 +809,20 @@ function renderScriptStep() {
                 `;
             });
 
-            const nina = getAlivePlayer(ROLES.NINA);
+            const nina = getAlivePlayer(ROLES.ESPIA);
             const ninaText = nina ? `<br><br><span style="color:var(--accent-blue); font-weight:bold;">(Atención: La Niña (${nina.name}) puede estar observando)</span>` : '';
 
             contentHtml = `
                 <div style="background:var(--bg-card); padding:10px; border-radius:8px; margin-bottom:15px; font-size:0.9rem;">
-                    <b>Manada:</b> ${lobosList}
+                    <b>Manada:</b> ${bestiasList}
                 </div>
-                <p class="script-instruction">"Los Lobos despiertan, se reconocen y deciden a quién devorar." ${ninaText}</p>
+                <p class="script-instruction">"las bestias despiertan, se reconocen y deciden a quién devorar." ${ninaText}</p>
                 <ul class="dashboard-grid" id="wolves-target-grid" style="margin-top:15px;">
                     ${gridItemsHtml}
                 </ul>
+                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🐾🐺</div>
             `;
-            scriptDom.nextBtn.textContent = "Lobos duermen (Siguiente)";
+            scriptDom.nextBtn.textContent = "Bestias duermen (Siguiente)";
             scriptDom.nextBtn.disabled = true; // Deshabilitado hasta que elija
 
             let selectedWolfTarget = null;
@@ -806,7 +851,7 @@ function renderScriptStep() {
             scriptDom.nextBtn.onclick = () => {
                 if (selectedWolfTarget !== null) {
                     nightVictims.push(parseInt(selectedWolfTarget));
-                    nightLog.push(`🐺 Los Lobos atacaron a ${state.assignedRoles[selectedWolfTarget].name}`);
+                    nightLog.push(`🐺 las bestias atacaron a ${state.assignedRoles[selectedWolfTarget].name}`);
                     advanceStep();
                 }
             };
@@ -817,19 +862,19 @@ function renderScriptStep() {
         }
     }
     else if (sState.step === 4) { // BRUJA
-        const bruja = getAlivePlayer(ROLES.BRUJA);
-        if (bruja && (bruja.potions.life || bruja.potions.death)) {
-            scriptDom.title.textContent = "Turno de la Bruja";
+        const hechicera = getAlivePlayer(ROLES.HECHICERA);
+        if (hechicera && (hechicera.potions.life || hechicera.potions.death)) {
+            scriptDom.title.textContent = "Turno de la Hechicera";
 
-            let victimMsg = nightVictims.length > 0 ? `Los lobos han atacado a: <br><b style="font-size:1.5rem; color:var(--accent-crimson);">${state.assignedRoles[nightVictims[0]].name}</b>` : `Los lobos no mataron a nadie.`;
+            let victimMsg = nightVictims.length > 0 ? `las bestias han atacado a: <br><b style="font-size:1.5rem; color:var(--accent-crimson);">${state.assignedRoles[nightVictims[0]].name}</b>` : `las bestias no mataron a nadie.`;
 
-            let lifeUsedText = bruja.potions.lifeTarget ? ` (Salvó a ${bruja.potions.lifeTarget})` : ``;
-            let btnLife = bruja.potions.life ? `<button class="btn-primary" id="btn-potion-life" style="width:100%; margin-bottom:10px; background:#4CAF50; border-color:#2E7D32;">Usar Poción de Vida</button>` : `<p class="hint">Poción de Vida gastada${lifeUsedText}.</p>`;
+            let lifeUsedText = hechicera.potions.lifeTarget ? ` (Salvó a ${hechicera.potions.lifeTarget})` : ``;
+            let btnLife = hechicera.potions.life ? `<button class="btn-primary" id="btn-potion-life" style="width:100%; margin-bottom:10px; background:#4CAF50; border-color:#2E7D32;">Usar Poción de Vida</button>` : `<p class="hint">Poción de Vida gastada${lifeUsedText}.</p>`;
 
             let gridItemsHtml = '';
             state.assignedRoles.forEach((p, i) => {
                 const isDead = p.isDead;
-                const isSelf = p.role === ROLES.BRUJA;
+                const isSelf = p.role === ROLES.HECHICERA;
                 const isDying = nightVictims.includes(i);
                 const isSelectable = !isDead && !isSelf && !isDying;
                 const deadClass = isDead ? 'li-dead' : '';
@@ -845,8 +890,8 @@ function renderScriptStep() {
                 `;
             });
 
-            let deathUsedText = bruja.potions.deathTarget ? ` (Envenenó a ${bruja.potions.deathTarget})` : ``;
-            let btnDeath = bruja.potions.death ? `
+            let deathUsedText = hechicera.potions.deathTarget ? ` (Envenenó a ${hechicera.potions.deathTarget})` : ``;
+            let btnDeath = hechicera.potions.death ? `
                 <div style="margin-top:15px; border-top:1px dashed var(--border-ink); padding-top:15px;">
                     <button id="toggle-death-potion" class="btn-secondary" style="width:100%; margin-bottom:10px;">
                         Mostrar Poción de Muerte ▼
@@ -862,24 +907,24 @@ function renderScriptStep() {
             ` : `<p class="hint">Poción de Muerte gastada${deathUsedText}.</p>`;
 
             contentHtml = `
-                <p class="script-instruction">"La Bruja (<b>${bruja.name}</b>) despierta. Le muestro quién ha sido atacado."</p>
+                <p class="script-instruction">"La Hechicera (<b>${hechicera.name}</b>) despierta. Le muestro quién ha sido atacado."</p>
                 <div style="margin-bottom:20px; background:var(--bg-card); padding:15px; border-radius:8px;">${victimMsg}</div>
                 ${btnLife}
                 ${btnDeath}
-                <div style="margin-top:20px;"></div>
+                <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🧪✨</div>
             `;
 
-            scriptDom.nextBtn.textContent = "Bruja duerme (Siguiente)";
+            scriptDom.nextBtn.textContent = "Hechicera duerme (Siguiente)";
             let selectedWitchTarget = null;
 
             scriptDom.nextBtn.onclick = () => {
                 // Auto-aplicar la poción de muerte si dejaron una opción seleccionada pero no clickearon el botón de Usar
-                if (selectedWitchTarget !== null && bruja.potions.death) {
+                if (selectedWitchTarget !== null && hechicera.potions.death) {
                     const poisonedName = state.assignedRoles[selectedWitchTarget].name;
-                    nightLog.push(`🧪 La Bruja envenenó a ${poisonedName}`);
+                    nightLog.push(`🧪 La Hechicera envenenó a ${poisonedName}`);
                     nightVictims.push(parseInt(selectedWitchTarget));
-                    bruja.potions.death = false;
-                    bruja.potions.deathTarget = poisonedName;
+                    hechicera.potions.death = false;
+                    hechicera.potions.deathTarget = poisonedName;
                     saveState();
                 }
                 advanceStep();
@@ -907,10 +952,10 @@ function renderScriptStep() {
                     bLife.onclick = () => {
                         if (nightVictims.length > 0) {
                             const savedName = state.assignedRoles[nightVictims[0]].name;
-                            nightLog.push(`🧪 La Bruja salvó a ${savedName}`);
-                            nightVictims.shift(); // Removemos SOLO a la víctima de los lobos
-                            bruja.potions.life = false;
-                            bruja.potions.lifeTarget = savedName;
+                            nightLog.push(`🧪 La Hechicera salvó a ${savedName}`);
+                            nightVictims.shift(); // Removemos SOLO a la víctima de las bestias
+                            hechicera.potions.life = false;
+                            hechicera.potions.lifeTarget = savedName;
                             saveState();
                             bLife.disabled = true;
                             bLife.textContent = "¡Usada!";
@@ -941,10 +986,10 @@ function renderScriptStep() {
                     bDeath.onclick = () => {
                         if (selectedWitchTarget !== null) {
                             const poisonedName = state.assignedRoles[selectedWitchTarget].name;
-                            nightLog.push(`🧪 La Bruja envenenó a ${poisonedName}`);
+                            nightLog.push(`🧪 La Hechicera envenenó a ${poisonedName}`);
                             nightVictims.push(parseInt(selectedWitchTarget));
-                            bruja.potions.death = false;
-                            bruja.potions.deathTarget = poisonedName;
+                            hechicera.potions.death = false;
+                            hechicera.potions.deathTarget = poisonedName;
                             saveState();
                             bDeath.disabled = true;
                             bDeath.textContent = "¡Usada!";
@@ -988,7 +1033,7 @@ function renderScriptStep() {
 
         scriptDom.nextBtn.textContent = "Ir a Votación de la Aldea";
         scriptDom.nextBtn.onclick = () => {
-            const hunter = state.assignedRoles.find(p => p.role === ROLES.CAZADOR);
+            const hunter = state.assignedRoles.find(p => p.role === ROLES.GUARDIAN);
             const wasHunterAlive = hunter && !hunter.isDead;
 
             uniqueVictims.forEach(idx => {
@@ -998,7 +1043,7 @@ function renderScriptStep() {
             });
 
             if (wasHunterAlive && hunter.isDead) {
-                sState.step = 'cazador';
+                sState.step = 'guardian';
                 sState.nextStepAfterHunter = 6;
                 renderScriptStep();
             } else {
@@ -1054,13 +1099,13 @@ function renderScriptStep() {
                         `¿La aldea ha decidido ejecutar a <b>${target.name}</b>?`,
                         "",
                         () => {
-                            const hunter = state.assignedRoles.find(p => p.role === ROLES.CAZADOR);
+                            const hunter = state.assignedRoles.find(p => p.role === ROLES.GUARDIAN);
                             const wasHunterAlive = hunter && !hunter.isDead;
 
                             executeKill(idx);
 
                             if (wasHunterAlive && hunter.isDead) {
-                                sState.step = 'cazador';
+                                sState.step = 'guardian';
                                 sState.nextStepAfterHunter = 'end_day';
                                 renderScriptStep();
                             } else {
@@ -1077,11 +1122,11 @@ function renderScriptStep() {
             });
         }, 50);
     }
-    else if (sState.step === 'cazador') { // DISPARO DEL CAZADOR
-        scriptDom.title.textContent = "La última bala del Cazador";
+    else if (sState.step === 'guardian') { // DISPARO DEL CAZADOR
+        scriptDom.title.textContent = "La última bala del Guardián";
         
         let gridItemsHtml = '';
-        const hunter = state.assignedRoles.find(p => p.role === ROLES.CAZADOR);
+        const hunter = state.assignedRoles.find(p => p.role === ROLES.GUARDIAN);
         
         state.assignedRoles.forEach((p, i) => {
             const isDead = p.isDead;
@@ -1100,10 +1145,11 @@ function renderScriptStep() {
         });
 
         contentHtml = `
-            <p class="script-instruction">"El Cazador (<b>${hunter.name}</b>) ha muerto. En su último aliento, dispara su arma contra alguien..."</p>
+            <p class="script-instruction">"El Guardián (<b>${hunter.name}</b>) ha muerto. En su último aliento, dispara su arma contra alguien..."</p>
             <ul class="dashboard-grid" id="hunter-target-grid" style="margin-top:15px;">
                 ${gridItemsHtml}
             </ul>
+            <div style="text-align:center; font-size: 3rem; margin: 20px 0; opacity: 0.8;">🏹🛡️</div>
         `;
 
         scriptDom.nextBtn.textContent = "Disparar (Siguiente)";
@@ -1192,12 +1238,12 @@ function init() {
         }
     } else {
         showScreen('setup');
-        setupDom.wolvesCount.textContent = state.rolesCount.wolves;
-        setupDom.roles.vidente.checked = state.rolesCount.vidente;
-        setupDom.roles.bruja.checked = state.rolesCount.bruja;
-        setupDom.roles.cazador.checked = state.rolesCount.cazador;
-        setupDom.roles.cupido.checked = state.rolesCount.cupido;
-        setupDom.roles.nina.checked = state.rolesCount.nina;
+        setupDom.wolvesCount.textContent = state.rolesCount.bestias;
+        setupDom.roles.oraculo.checked = state.rolesCount.oraculo;
+        setupDom.roles.hechicera.checked = state.rolesCount.hechicera;
+        setupDom.roles.guardian.checked = state.rolesCount.guardian;
+        setupDom.roles.eros.checked = state.rolesCount.eros;
+        setupDom.roles.espia.checked = state.rolesCount.espia;
         renderSetupPlayers();
     }
 }

@@ -27,7 +27,7 @@ body {
     background-color: var(--bg-parchment);
     color: var(--text-ink);
     font-family: var(--font-body);
-    line-height: 1.6;
+    line-height: 1.2;
     background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.05"/></svg>');
 }
 
@@ -206,7 +206,7 @@ input[type="text"]:focus {
 .number-control {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 25px;
     font-family: var(--font-heading);
     font-size: 1.2rem;
 }
@@ -259,8 +259,8 @@ input[type="text"]:focus {
 
 /* Botones Principales */
 .actions {
-    margin-top: auto;
-    padding: 20px 0;
+    margin-top: -25%;
+    padding: 100px 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -295,7 +295,7 @@ input[type="text"]:focus {
     background: var(--accent-blue);
     color: var(--bg-parchment);
     border: 2px solid #0f2336;
-    padding: 15px;
+    padding: 10px;
     font-family: var(--font-heading);
     font-size: 1.2rem;
     border-radius: 4px;
@@ -309,7 +309,7 @@ input[type="text"]:focus {
 }
 
 .btn-danger {
-    background: transparent;
+    background: #f77d7d8a;
     color: var(--accent-crimson);
     border: 2px solid var(--accent-crimson);
     padding: 10px;
@@ -383,18 +383,18 @@ input[type="text"]:focus {
     margin-top: 10px;
 }
 
-.status-lobos {
+.status-bestias {
     color: var(--accent-crimson);
 }
 
-.status-aldeanos {
+.status-campesinos {
     color: var(--accent-blue);
 }
 
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 1px;
     list-style: none;
     padding: 0;
 }
@@ -411,7 +411,7 @@ input[type="text"]:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 70px;
+    min-height: 65px;
     font-size: 0.85rem;
     box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
     transition: transform 0.1s;
@@ -492,31 +492,31 @@ input[type="text"]:focus {
 }
 
 /* Colores de Roles (Dashboard) */
-.player-role[data-role="Lobo"] {
+.player-role[data-role="Bestia"] {
     color: #b33939;
 }
 
-.player-role[data-role="Aldeano"] {
+.player-role[data-role="Campesino"] {
     color: #3b6b91;
 }
 
-.player-role[data-role="Vidente"] {
+.player-role[data-role="Oráculo"] {
     color: #76458f;
 }
 
-.player-role[data-role="Bruja"] {
+.player-role[data-role="Hechicera"] {
     color: #408558;
 }
 
-.player-role[data-role="Cazador"] {
+.player-role[data-role="Guardián"] {
     color: #a86c2f;
 }
 
-.player-role[data-role="Cupido"] {
+.player-role[data-role="Eros"] {
     color: #b54a86;
 }
 
-.player-role[data-role="Niña"] {
+.player-role[data-role="Espía"] {
     color: #368a8a;
 }
 
@@ -604,23 +604,23 @@ input[type="text"]:focus {
     transition: background-color 0.5s ease;
 }
 
-.bg-stage-cupido {
+.bg-stage-eros {
     background-color: #e0f7fa !important;
 }
 
-.bg-stage-lobos {
+.bg-stage-bestias {
     background-color: #b19095 !important;
 }
 
-.bg-stage-bruja {
-    background-color: #ef8bff !important;
+.bg-stage-hechicera {
+    background-color: #f2bffa !important;
 }
 
-.bg-stage-vidente {
+.bg-stage-oraculo {
     background-color: #f9bacf !important;
 }
 
-.bg-stage-cazador {
+.bg-stage-guardian {
     background-color: #b1fcb7 !important;
 }
 
@@ -630,4 +630,25 @@ input[type="text"]:focus {
 
 .bg-stage-default {
     background-color: var(--bg-parchment) !important;
+}
+
+/* Logo Global Watermark */
+.watermark-logo {
+    position: fixed;
+    top: 93%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 165px;
+    /* Triple del tamaño anterior (180px) */
+    height: auto;
+    opacity: 0.7;
+    /* Ligeramente transparente */
+    z-index: 9999;
+    pointer-events: none;
+    /* Evita que bloquee clics en botones de la interfaz */
+    border-radius: 8px;
+    /* Opcional por si tiene esquinas rectas */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    /* Ligera sombra para separar del fondo */
+    transition: opacity 0.3s;
 }
